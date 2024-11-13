@@ -40,14 +40,14 @@ Dependencies
 References
 -------
 
-* Bruce Lindholm 
+* Bruce Lindholm   
 http://www.brucelindbloom.com/index.html?Eqn_RGB_XYZ_Matrix.html
 
-* Wikipedia 
+* Wikipedia   
 https://en.wikipedia.org/wiki/DCI-P3
 https://en.wikipedia.org/wiki/Standard_illuminant
 
-* Arri 
+* Arri   
 https://www.arri.com/resource/blob/278790/dc29f7399c1dc9553d329e27f1409a89/2022-05-arri-logc4-specification-data.pdf
 https://www.arri.com/resource/blob/31918/66f56e6abb6e5b6553929edf9aa7483e/2017-03-alexa-logc-curve-in-vfx-data.pdf
   

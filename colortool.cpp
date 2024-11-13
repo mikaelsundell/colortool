@@ -185,7 +185,7 @@ Eigen::Matrix3d adaptation_matrix(const Eigen::Vector3d& source, const Eigen::Ve
     Eigen::Vector3d sourcelms = m * source;
     Eigen::Vector3d targetlms = m * target;
     Eigen::Matrix3d scale = targetlms.cwiseQuotient(sourcelms).asDiagonal(); // compute scaling factors
-    Eigen::Matrix3d adaptationMatrix = m.inverse() * scale * m; // computer final adaptation
+    Eigen::Matrix3d adaptationMatrix = m.inverse() * scale * m; // compute final adaptation
     return adaptationMatrix;
 }
 

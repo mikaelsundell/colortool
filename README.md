@@ -26,7 +26,7 @@ cmake --build . --config Release -j 8
 mkdir build
 cd build
 cmake ..
-cmake .. -DCMAKE_INSTALL_PREFIX=<path>/3rdparty/build/macosx/arm64.debug -DCMAKE_INSTALL_PREFIX=<path>/3rdparty/build/macosx/arm64.debug -DCMAKE_CXX_FLAGS="-I<path>/3rdparty/build/macosx/arm64.debug/include/eigen3" -DBUILD_SHARED_LIBS=TRUE -GXcode
+cmake .. -DCMAKE_PREFIX_PATH=<path>/3rdparty/build/macosx/arm64.debug -DCMAKE_INSTALL_PREFIX=<path>/3rdparty/build/macosx/arm64.debug -DCMAKE_CXX_FLAGS="-I<path>/include/eigen3" -DBUILD_SHARED_LIBS=TRUE -GXcode
 ```
 
 Dependencies
@@ -36,8 +36,6 @@ Dependencies
 | ----------- | ----------- |
 | Eigen       | [Eigen website](https://eigen.tuxfamily.org/index.php?title=Main_Page)
 | OpenImageIO | [OpenImageIO project @ Github](https://github.com/OpenImageIO/oiio)
-| OpenColorIO | [OpenColorIO project @ Github](https://github.com/AcademySoftwareFoundation/OpenColorIO)
-| OpenEXR     | [OpenEXR project @ Github](https://github.com/AcademySoftwareFoundation/openexr)
 
 References
 -------

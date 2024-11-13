@@ -1,6 +1,6 @@
-# Copyright 2022-present Contributors to the logctool project.
+# Copyright 2022-present Contributors to the colortool project.
 # SPDX-License-Identifier: BSD-3-Clause
-# https://github.com/mikaelsundell/logctool
+# https://github.com/mikaelsundell/colortool
 
 cmake_minimum_required(VERSION 3.23)
 set( project_name "colortool" )

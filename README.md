@@ -1,7 +1,7 @@
 README for colortool
 ==================
 
-[![License](https://img.shields.io/badge/license-BSD%203--Clause-blue.svg?style=flat-square)](https://github.com/mikaelsundell/logctool/blob/master/README.md)
+[![License](https://img.shields.io/badge/license-BSD%203--Clause-blue.svg?style=flat-square)](https://github.com/mikaelsundell/colortool/blob/master/README.md)
 
 Introduction
 ------------
@@ -16,7 +16,7 @@ The colortool app can be built both from commandline or using optional Xcode `-G
 ```shell
 mkdir build
 cd build
-cmake .. -DCMAKE_MODULE_PATH=<path>/logctool/modules -DCMAKE_INSTALL_PREFIX=<path> -DCMAKE_PREFIX_PATH=<path> -GXcode
+cmake .. -DCMAKE_MODULE_PATH=<path>/colortool/modules -DCMAKE_INSTALL_PREFIX=<path> -DCMAKE_PREFIX_PATH=<path> -GXcode
 cmake --build . --config Release -j 8
 ```
 

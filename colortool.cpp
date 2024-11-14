@@ -41,7 +41,7 @@ print_info(std::string param) {
 }
 
 template <typename Derived>
-static void print_eigen(const std::string& param, const Eigen::MatrixBase<Derived>& value) {
+static void print_value(const std::string& param, const Eigen::MatrixBase<Derived>& value) {
     std::cout << "info: " << param;
     if (value.cols() == 1 || value.rows() == 1) {
         for (int i = 0; i < value.size(); ++i) {
@@ -59,13 +59,35 @@ static void print_eigen(const std::string& param, const Eigen::MatrixBase<Derive
                     std::cout << ", ";
                 }
             }
-            std::cout << std::endl;
             if (i < value.rows() - 1) {
-                std::cout << "info:     ";
+                std::cout << std::endl << "info:     ";
             }
         }
     }
-    std::cout << std::endl;
+    std::cout << std::endl;  // Final newline at the end of output
+}
+
+template <typename Derived>
+static void print_script(const std::string& param, const Eigen::MatrixBase<Derived>& value) {
+    std::cout << "info: " << param << " { ";
+    if (value.cols() == 1 || value.rows() == 1) {
+        for (int i = 0; i < value.size(); ++i) {
+            std::cout << value(i);
+            if (i < value.size() - 1) {
+                std::cout << ", ";
+            }
+        }
+    } else {
+        for (int i = 0; i < value.rows(); ++i) {
+            for (int j = 0; j < value.cols(); ++j) {
+                std::cout << value(i, j);
+                if (i < value.rows() - 1 || j < value.cols() - 1) {
+                    std::cout << ", ";
+                }
+            }
+        }
+    }
+    std::cout << " }" << std::endl;
 }
 
 template <typename T>
@@ -96,6 +118,7 @@ AdaptationMethod {
     None,
     XYZScaling,
     Bradford,
+    Cat02,
     VonKries
 };
 
@@ -105,7 +128,10 @@ struct ColorTool
     bool help = false;
     bool verbose = false;
     bool colorspaces = false;
-    AdaptationMethod adaptationmethod = Bradford;
+    bool illuminants = false;
+    AdaptationMethod adaptationmethod = Cat02;
+    std::string inputilluminant;
+    std::string outputilluminant;
     std::string inputcolorspace;
     std::string outputcolorspace;
     int code = EXIT_SUCCESS;
@@ -123,6 +149,9 @@ set_adaptationmethod(int argc, const char* argv[])
     }
     else if (str == "bradford") {
         tool.adaptationmethod = AdaptationMethod::Bradford;
+    }
+    else if (str == "cat02") {
+        tool.adaptationmethod = AdaptationMethod::Cat02;
     }
     else if (str == "vonkries") {
         tool.adaptationmethod = AdaptationMethod::VonKries;
@@ -172,6 +201,11 @@ Eigen::Matrix3d adaptation_matrix(AdaptationMethod method) {
              -0.7502,  1.7135,  0.0367,
               0.0389, -0.0685,  1.0296;
     }
+    else if (method == Cat02) {
+        m <<  0.7328,  0.4296, -0.1624,
+             -0.7036,  1.6975,  0.0061,
+              0.0030,  0.0136,  0.9834;
+    }
     else if (method == VonKries) {
         m <<  0.40024,  0.70760, -0.08081,
              -0.22630,  1.16532,  0.04570,
@@ -204,9 +238,19 @@ std::string resources_path(const std::string& resource)
 struct Colorspace
 {
     std::string name;
+    std::string description;
+    std::string trc;
     Eigen::Vector2d r;
     Eigen::Vector2d g;
     Eigen::Vector2d b;
+    Eigen::Vector2d whitepoint;
+};
+
+// illuminant
+struct Illuminant
+{
+    std::string name;
+    std::string description;
     Eigen::Vector2d whitepoint;
 };
 
@@ -236,18 +280,27 @@ main( int argc, const char * argv[])
     ap.arg("--colorspaces", &tool.colorspaces)
       .help("List all colorspaces");
     
+    ap.arg("--illuminants", &tool.illuminants)
+      .help("List all illuminants");
+    
     ap.arg("--adaptationmethod %s:adaptationmethod")
-      .help("Adaptation methods: xyzscaling, bradford, vonkries, default: bradford")
+      .help("Adaptation methods: xyzscaling, bradford, cat02, vonkries, default: cat02")
       .action(set_adaptationmethod);
 
     ap.separator("Input flags:");
     ap.arg("--inputcolorspace %s:FILE", &tool.inputcolorspace)
       .help("Input color space");
     
+    ap.arg("--inputilluminant %s:FILE", &tool.inputilluminant)
+      .help("Input illuminant");
+    
     ap.separator("Output flags:");
     ap.arg("--outputcolorspace %s:FILE", &tool.outputcolorspace)
-      .help("Output color space");
+      .help("Output color space, required to compute transform");
 
+    ap.arg("--outputilluminant %s:FILE", &tool.outputilluminant)
+      .help("Output illuminant, required to compute transform");
+    
     // clang-format on
     if (ap.parse_args(argc, (const char**)argv) < 0) {
         print_error("Could no parse arguments: ", ap.geterror());
@@ -262,18 +315,6 @@ main( int argc, const char * argv[])
     }
     
     if (!tool.colorspaces) {
-        if (!tool.inputcolorspace.size()) {
-            print_error("missing parameter: ", "inputcolorspace");
-            ap.briefusage();
-            ap.abort();
-            return EXIT_FAILURE;
-        }
-        if (!tool.outputcolorspace.size()) {
-            print_error("missing parameter: ", "outputcolorspace");
-            ap.briefusage();
-            ap.abort();
-            return EXIT_FAILURE;
-        }
         if (argc <= 1) {
             ap.briefusage();
             print_error("For detailed help: colortool --help");
@@ -289,37 +330,40 @@ main( int argc, const char * argv[])
 
     // colorspaces
     std::map<std::string, Colorspace> colorspaces;
-    std::string jsonfile = resources_path("colorspaces.json");
-    std::ifstream json(jsonfile);
-    if (json.is_open()) {
-        ptree pt;
-        read_json(jsonfile, pt);
-        for (const std::pair<const ptree::key_type, ptree&>& item : pt) {
-            std::string name = item.first;
-            const ptree& data = item.second;
-            Colorspace cs;
-            cs.name = name;
-            bool valid = true;
-            try {
-                cs.r.x() = data.get<double>("primaries.R.x", 0.0f);
-                cs.r.y() = data.get<double>("primaries.R.y", 0.0f);
-                cs.g.x() = data.get<double>("primaries.G.x", 0.0f);
-                cs.g.y() = data.get<double>("primaries.G.y", 0.0f);
-                cs.b.x() = data.get<double>("primaries.B.x", 0.0f);
-                cs.b.y() = data.get<double>("primaries.B.y", 0.0f);
-                cs.whitepoint.x() = data.get<double>("whitepoint.x", 0.0f);
-                cs.whitepoint.y() = data.get<double>("whitepoint.y", 0.0f);
-            } catch (const boost::property_tree::ptree_error& e) {
-                valid = false;
-                print_error("missing or invalid value in colorspace: ", e.what());
-                return EXIT_FAILURE;
+    {
+        std::string jsonfile = resources_path("colorspaces.json");
+        std::ifstream json(jsonfile);
+        if (json.is_open()) {
+            ptree pt;
+            read_json(jsonfile, pt);
+            for (const std::pair<const ptree::key_type, ptree&>& item : pt) {
+                std::string name = item.first;
+                const ptree& data = item.second;
+                Colorspace cs;
+                cs.name = name;
+                bool valid = true;
+                try {
+                    cs.description = data.get<std::string>("description");
+                    cs.r.x() = data.get<double>("primaries.R.x", 0.0f);
+                    cs.r.y() = data.get<double>("primaries.R.y", 0.0f);
+                    cs.g.x() = data.get<double>("primaries.G.x", 0.0f);
+                    cs.g.y() = data.get<double>("primaries.G.y", 0.0f);
+                    cs.b.x() = data.get<double>("primaries.B.x", 0.0f);
+                    cs.b.y() = data.get<double>("primaries.B.y", 0.0f);
+                    cs.whitepoint.x() = data.get<double>("whitepoint.x", 0.0f);
+                    cs.whitepoint.y() = data.get<double>("whitepoint.y", 0.0f);
+                } catch (const boost::property_tree::ptree_error& e) {
+                    valid = false;
+                    print_error("missing or invalid value in colorspace: ", e.what());
+                    return EXIT_FAILURE;
+                }
+                colorspaces[name] = cs;
             }
-            colorspaces[name] = cs;
+        } else {
+            print_error("could not open colorspaces file: ", jsonfile);
+            ap.abort();
+            return EXIT_FAILURE;
         }
-    } else {
-        print_error("could not open colorspace file: ", jsonfile);
-        ap.abort();
-        return EXIT_FAILURE;
     }
     
     if (tool.colorspaces) {
@@ -330,106 +374,243 @@ main( int argc, const char * argv[])
         return EXIT_SUCCESS;
     }
     
-    if (!colorspaces.count(tool.inputcolorspace)) {
-        print_error("unknown input colorsoace: ", tool.inputcolorspace);
-        ap.abort();
-        return EXIT_FAILURE;
+    // illuminants
+    std::map<std::string, Illuminant> illuminants;
+    {
+        std::string jsonfile = resources_path("illuminants.json");
+        std::ifstream json(jsonfile);
+        if (json.is_open()) {
+            ptree pt;
+            read_json(jsonfile, pt);
+            for (const std::pair<const ptree::key_type, ptree&>& item : pt) {
+                std::string name = item.first;
+                const ptree& data = item.second;
+                Illuminant im;
+                im.name = name;
+                bool valid = true;
+                try {
+                    im.description = data.get<std::string>("description");
+                    im.whitepoint.x() = data.get<double>("whitepoint.x", 0.0f);
+                    im.whitepoint.y() = data.get<double>("whitepoint.y", 0.0f);
+                } catch (const boost::property_tree::ptree_error& e) {
+                    valid = false;
+                    print_error("missing or invalid value in illuminants: ", e.what());
+                    return EXIT_FAILURE;
+                }
+                illuminants[name] = im;
+            }
+        } else {
+            print_error("could not open illuminants file: ", jsonfile);
+            ap.abort();
+            return EXIT_FAILURE;
+        }
     }
     
-    if (!colorspaces.count(tool.outputcolorspace)) {
-        print_error("unknown output colorsoace: ", tool.outputcolorspace);
-        ap.abort();
-        return EXIT_FAILURE;
+    if (tool.illuminants) {
+        print_info("Illuminants:");
+        for (const std::pair<std::string, Illuminant>& pair : illuminants) {
+            print_info("    ", pair.first);
+        }
+        return EXIT_SUCCESS;
     }
-
+    
     // input colorspace
-    Eigen::Matrix3d inputxyz;
-    Colorspace inputcolorspace = colorspaces[tool.inputcolorspace];
-    Eigen::Vector3d inputwhitepoint;
-    print_info("input colorspace: ", inputcolorspace.name);
-    {
-        Eigen::Vector3d r = xy_to_xyz(inputcolorspace.r);
-        Eigen::Vector3d g = xy_to_xyz(inputcolorspace.g);
-        Eigen::Vector3d b = xy_to_xyz(inputcolorspace.b);
-        inputwhitepoint = xy_to_xyz(inputcolorspace.whitepoint);
-        if (tool.verbose) {
-            print_info("  XY");
-            print_eigen("    r: ", inputcolorspace.r);
-            print_eigen("    g: ", inputcolorspace.g);
-            print_eigen("    b: ", inputcolorspace.b);
-            print_eigen("    whitepoint: ", inputcolorspace.whitepoint);
-            print_info("  XYZ");
-            print_eigen("    r: ", r);
-            print_eigen("    g: ", g);
-            print_eigen("    b: ", b);
-            print_eigen("    whitepoint: ", inputwhitepoint);
+    if (tool.inputcolorspace.size()) {
+        if (!colorspaces.count(tool.inputcolorspace)) {
+            print_error("unknown input colorspace: ", tool.inputcolorspace);
+            ap.abort();
+            return EXIT_FAILURE;
         }
-        inputxyz = rgb_to_xyz(r, g, b, inputwhitepoint);
-        print_info("  RGB XYZ");
-        print_eigen("    matrix: ", inputxyz);
-        print_info("  XYZ RGB");
-        print_eigen("    matrix: ", inputxyz.inverse());
-    }
-    
-    // output color space
-    Eigen::Matrix3d outputxyz;
-    Colorspace outputcolorspace = colorspaces[tool.outputcolorspace];
-    Eigen::Vector3d outputwhitepoint;
-    print_info("output color space: ", outputcolorspace.name);
-    {
-        outputcolorspace = colorspaces[tool.outputcolorspace];
-        Eigen::Vector3d r = xy_to_xyz(outputcolorspace.r);
-        Eigen::Vector3d g = xy_to_xyz(outputcolorspace.g);
-        Eigen::Vector3d b = xy_to_xyz(outputcolorspace.b);
-        outputwhitepoint = xy_to_xyz(outputcolorspace.whitepoint);
-        if (tool.verbose) {
-           
-            print_info("  XY");
-            print_eigen("    r: ", outputcolorspace.r);
-            print_eigen("    g: ", outputcolorspace.g);
-            print_eigen("    b: ", outputcolorspace.b);
-            print_eigen("    whitepoint: ", outputcolorspace.whitepoint);
-            print_info("  XYZ");
-            print_eigen("    r: ", r);
-            print_eigen("    g: ", g);
-            print_eigen("    b: ", b);
-            print_eigen("    whitepoint: ", outputwhitepoint);
+        
+        Eigen::Matrix3d inputxyz;
+        Colorspace inputcolorspace = colorspaces[tool.inputcolorspace];
+        Eigen::Vector3d inputwhitepoint;
+        print_info("input colorspace: ", inputcolorspace.name);
+        {
+            Eigen::Vector3d r = xy_to_xyz(inputcolorspace.r);
+            Eigen::Vector3d g = xy_to_xyz(inputcolorspace.g);
+            Eigen::Vector3d b = xy_to_xyz(inputcolorspace.b);
+            inputwhitepoint = xy_to_xyz(inputcolorspace.whitepoint);
+            if (tool.verbose) {
+                print_info("  XY");
+                print_value("    r: ", inputcolorspace.r);
+                print_value("    g: ", inputcolorspace.g);
+                print_value("    b: ", inputcolorspace.b);
+                print_value("    whitepoint: ", inputcolorspace.whitepoint);
+                print_info("  XYZ");
+                print_value("    r: ", r);
+                print_value("    g: ", g);
+                print_value("    b: ", b);
+                print_value("    whitepoint: ", inputwhitepoint);
+            }
+            inputxyz = rgb_to_xyz(r, g, b, inputwhitepoint);
+            print_info("  RGB XYZ");
+            print_value("    matrix: ", inputxyz);
+            print_info("  XYZ RGB");
+            print_value("    matrix: ", inputxyz.inverse());
         }
-        outputxyz = rgb_to_xyz(r, g, b, outputwhitepoint);
-        print_info("  RGB XYZ");
-        print_eigen("    matrix: ", outputxyz);
-        print_info("  XYZ RGB");
-        print_eigen("    matrix: ", outputxyz.inverse());
-    }
+        
+        // output color space
+        if (tool.outputcolorspace.size()) {
+            if (!colorspaces.count(tool.outputcolorspace)) {
+                print_error("unknown output colorsoace: ", tool.outputcolorspace);
+                ap.abort();
+                return EXIT_FAILURE;
+            }
 
-    // whitepoint adaptation
-    Eigen::Matrix3d adaptation;
-    adaptation = adaptation_matrix(inputwhitepoint, outputwhitepoint, tool.adaptationmethod);
-    std::string adaptationmethod;
-    if (tool.adaptationmethod == AdaptationMethod::XYZScaling) {
-        adaptationmethod = "XYZScaling";
+            Eigen::Matrix3d outputxyz;
+            Colorspace outputcolorspace = colorspaces[tool.outputcolorspace];
+            Eigen::Vector3d outputwhitepoint;
+            print_info("output colorspace: ", outputcolorspace.name);
+            {
+                Eigen::Vector3d r = xy_to_xyz(outputcolorspace.r);
+                Eigen::Vector3d g = xy_to_xyz(outputcolorspace.g);
+                Eigen::Vector3d b = xy_to_xyz(outputcolorspace.b);
+                outputwhitepoint = xy_to_xyz(outputcolorspace.whitepoint);
+                if (tool.verbose) {
+                   
+                    print_info("  XY");
+                    print_value("    r: ", outputcolorspace.r);
+                    print_value("    g: ", outputcolorspace.g);
+                    print_value("    b: ", outputcolorspace.b);
+                    print_value("    whitepoint: ", outputcolorspace.whitepoint);
+                    print_info("  XYZ");
+                    print_value("    r: ", r);
+                    print_value("    g: ", g);
+                    print_value("    b: ", b);
+                    print_value("    whitepoint: ", outputwhitepoint);
+                }
+                outputxyz = rgb_to_xyz(r, g, b, outputwhitepoint);
+                print_info("  RGB XYZ");
+                print_value("    matrix: ", outputxyz);
+                print_info("  XYZ RGB");
+                print_value("    matrix: ", outputxyz.inverse());
+            }
+
+            // whitepoint adaptation
+            Eigen::Matrix3d adaptation;
+            adaptation = adaptation_matrix(inputwhitepoint, outputwhitepoint, tool.adaptationmethod);
+            std::string adaptationmethod;
+            {
+                if (tool.adaptationmethod == AdaptationMethod::XYZScaling) {
+                    adaptationmethod = "XYZScaling";
+                }
+                else if (tool.adaptationmethod == AdaptationMethod::Bradford) {
+                    adaptationmethod = "Bradford";
+                }
+                else if (tool.adaptationmethod == AdaptationMethod::Cat02) {
+                    adaptationmethod = "Cat02";
+                }
+                else if (tool.adaptationmethod == AdaptationMethod::VonKries) {
+                    adaptationmethod = "VonKries";
+                }
+                print_info("whitepoint adaptation: ", adaptationmethod);
+                print_value("    matrix: ", adaptation);
+                if (tool.verbose) {
+                    print_info("input colorspace: ", inputcolorspace.name);
+                    print_value("    whitepoint: ", inputcolorspace.whitepoint);
+                    print_value("    whitepoint xyz: ", inputwhitepoint);
+                    print_info("output colorspace: ", outputcolorspace.name);
+                    print_value("    whitepoint: ", outputcolorspace.whitepoint);
+                    print_value("    whitepoint xyz: ", outputwhitepoint);
+                }
+                
+                // transform
+                Eigen::Matrix3d transform;
+                transform = outputxyz.inverse() * adaptation * inputxyz;
+                print_info("input to output transformation");
+                print_value("    matrix: ", transform);
+                print_script("  script: ", transform);
+            }
+        }
+        else {
+            print_info("no output color space defined, will be skipped.");
+        }
     }
-    else if (tool.adaptationmethod == AdaptationMethod::Bradford) {
-        adaptationmethod = "Bradford";
-    }
-    else if (tool.adaptationmethod == AdaptationMethod::VonKries) {
-        adaptationmethod = "VonKries";
-    }
-    print_info("whitepoint adaptation: ", adaptationmethod);
-    print_eigen("    matrix: ", adaptation);
-    if (tool.verbose) {
-        print_info("input color space: ", inputcolorspace.name);
-        print_eigen("    whitepoint: ", inputcolorspace.whitepoint);
-        print_eigen("    whitepoint xyz: ", inputwhitepoint);
-        print_info("output color space: ", outputcolorspace.name);
-        print_eigen("    whitepoint: ", outputcolorspace.whitepoint);
-        print_eigen("    whitepoint xyz: ", outputwhitepoint);
+    else {
+        print_info("no input color space defined, will be skipped.");
     }
     
-    // transform
-    Eigen::Matrix3d transform;
-    transform = outputxyz.inverse() * adaptation * inputxyz;
-    print_info("input to output transformation");
-    print_eigen("    matrix: ", transform);
+    // input illuminant
+    if (tool.inputilluminant.size()) {
+        if (!illuminants.count(tool.inputilluminant)) {
+            print_error("unknown input illuminant: ", tool.inputilluminant);
+            ap.abort();
+            return EXIT_FAILURE;
+        }
+        
+        Eigen::Matrix3d inputxyz;
+        Illuminant inputilluminant = illuminants[tool.inputilluminant];
+        Eigen::Vector3d inputwhitepoint;
+        print_info("input colorspace: ", inputilluminant.name);
+        print_info("     description: ", inputilluminant.description);
+        {
+            inputwhitepoint = xy_to_xyz(inputilluminant.whitepoint);
+            if (tool.verbose) {
+                print_info("  XY");
+                print_value("    whitepoint: ", inputilluminant.whitepoint);
+                print_info("  XYZ");
+                print_value("    whitepoint: ", inputwhitepoint);
+            }
+        }
+        
+        // output illuminant
+        if (tool.outputilluminant.size()) {
+            if (!illuminants.count(tool.outputilluminant)) {
+                print_error("unknown output illuminant: ", tool.outputilluminant);
+                ap.abort();
+                return EXIT_FAILURE;
+            }
+
+            Eigen::Matrix3d outputxyz;
+            Illuminant outputilluminant = illuminants[tool.outputilluminant];
+            Eigen::Vector3d outputwhitepoint;
+            print_info("output illuminant: ", outputilluminant.name);
+            {
+                outputwhitepoint = xy_to_xyz(outputilluminant.whitepoint);
+                if (tool.verbose) {
+                    print_info("  XY");
+                    print_value("    whitepoint: ", outputilluminant.whitepoint);
+                    print_info("  XYZ");
+                    print_value("    whitepoint: ", outputwhitepoint);
+                }
+            }
+
+            // whitepoint adaptation
+            Eigen::Matrix3d adaptation;
+            adaptation = adaptation_matrix(inputwhitepoint, outputwhitepoint, tool.adaptationmethod);
+            std::string adaptationmethod;
+            {
+                if (tool.adaptationmethod == AdaptationMethod::XYZScaling) {
+                    adaptationmethod = "XYZScaling";
+                }
+                else if (tool.adaptationmethod == AdaptationMethod::Bradford) {
+                    adaptationmethod = "Bradford";
+                }
+                else if (tool.adaptationmethod == AdaptationMethod::Cat02) {
+                    adaptationmethod = "Cat02";
+                }
+                else if (tool.adaptationmethod == AdaptationMethod::VonKries) {
+                    adaptationmethod = "VonKries";
+                }
+                print_info("whitepoint adaptation: ", adaptationmethod);
+                print_value("    matrix: ", adaptation);
+                if (tool.verbose) {
+                    print_info("input illuminant: ", inputilluminant.name);
+                    print_value("    whitepoint: ", inputilluminant.whitepoint);
+                    print_value("    whitepoint xyz: ", inputwhitepoint);
+                    print_info("output illuminant: ", outputilluminant.name);
+                    print_value("    whitepoint: ", outputilluminant.whitepoint);
+                    print_value("    whitepoint xyz: ", outputwhitepoint);
+                }
+            }
+        }
+        else {
+            print_info("no output illuminant defined, will be skipped.");
+        }
+    }
+    else {
+        print_info("no input illuminant defined, will be skipped.");
+    }
     return 0;
 }

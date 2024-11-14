@@ -34,14 +34,15 @@ Dependencies
 
 | Project     | Description |
 | ----------- | ----------- |
-| Eigen       | [Eigen website](https://eigen.tuxfamily.org/index.php?title=Main_Page)
-| OpenImageIO | [OpenImageIO project @ Github](https://github.com/OpenImageIO/oiio)
+| Eigen       | [Eigen project](https://eigen.tuxfamily.org/index.php?title=Main_Page)
+| OpenImageIO | [OpenImageIO project](https://github.com/OpenImageIO/oiio)
 
 References
 -------
 
-* Bruce Lindholm   
+* Math
 http://www.brucelindbloom.com/index.html?Eqn_RGB_XYZ_Matrix.html
+https://haraldbrendel.com/colorspacecalculator.html
 
 * Wikipedia   
 https://en.wikipedia.org/wiki/DCI-P3

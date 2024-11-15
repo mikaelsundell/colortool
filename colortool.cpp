@@ -446,8 +446,10 @@ main( int argc, const char * argv[])
             inputxyz = rgb_to_xyz(r, g, b, inputwhitepoint);
             print_info("  RGB XYZ");
             print_value("    matrix: ", inputxyz);
+            print_value("    matrix transposed: ", inputxyz.transpose());
             print_info("  XYZ RGB");
             print_value("    matrix: ", inputxyz.inverse());
+            print_value("    matrix transposed: ", inputxyz.inverse().transpose());
         }
         
         // output color space
@@ -483,8 +485,10 @@ main( int argc, const char * argv[])
                 outputxyz = rgb_to_xyz(r, g, b, outputwhitepoint);
                 print_info("  RGB XYZ");
                 print_value("    matrix: ", outputxyz);
+                print_value("    matrix transposed: ", outputxyz.transpose());
                 print_info("  XYZ RGB");
                 print_value("    matrix: ", outputxyz.inverse());
+                print_value("    matrix transposed: ", outputxyz.inverse().transpose());
             }
 
             // whitepoint adaptation
@@ -506,6 +510,7 @@ main( int argc, const char * argv[])
                 }
                 print_info("whitepoint adaptation: ", adaptationmethod);
                 print_value("    matrix: ", adaptation);
+                print_value("    matrix transposed: ", adaptation.transpose());
                 if (tool.verbose) {
                     print_info("input colorspace: ", inputcolorspace.name);
                     print_value("    whitepoint: ", inputcolorspace.whitepoint);
@@ -521,6 +526,8 @@ main( int argc, const char * argv[])
                 print_info("input to output transformation");
                 print_value("    matrix: ", transform);
                 print_script("  script: ", transform);
+                print_value("    matrix transposed: ", transform.transpose());
+                print_script("  script transposed: ", transform.transpose());
             }
         }
         else {
@@ -595,6 +602,7 @@ main( int argc, const char * argv[])
                 }
                 print_info("whitepoint adaptation: ", adaptationmethod);
                 print_value("    matrix: ", adaptation);
+                print_value("    matrix transposed: ", adaptation.transpose());
                 if (tool.verbose) {
                     print_info("input illuminant: ", inputilluminant.name);
                     print_value("    whitepoint: ", inputilluminant.whitepoint);

@@ -1,4 +1,48 @@
 {
+    "AP0": {
+        "description": "ACES 2065-1",
+        "trc": "Linear",
+        "primaries": {
+            "R": {
+                "x": 0.7347,
+                "y": 0.2653
+            },
+            "G": {
+                "x": 0.0000,
+                "y": 1.0000
+            },
+            "B": {
+                "x": 0.0001,
+                "y": -0.0770
+            }
+        },
+        "whitepoint": {
+            "x": 0.32168,
+            "y": 0.33767
+        }
+    },
+    "AP1": {
+        "description": "cg, cc, cct, proxy",
+        "trc": "cc, cct",
+        "primaries": {
+            "R": {
+                "x": 0.713,
+                "y": 0.293
+            },
+            "G": {
+                "x": 0.165,
+                "y": 0.830
+            },
+            "B": {
+                "x": 0.128,
+                "y": 0.044
+            }
+        },
+        "whitepoint": {
+            "x": 0.32168,
+            "y": 0.33767
+        }
+    },
     "AWG3": {
         "description": "ARRI Wide Gamut 3 D65",
         "trc": "LogC3",

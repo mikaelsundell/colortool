@@ -16,18 +16,25 @@ The colortool app can be built both from commandline or using optional Xcode `-G
 ```shell
 mkdir build
 cd build
-cmake .. -DCMAKE_MODULE_PATH=<path>/colortool/modules -DCMAKE_INSTALL_PREFIX=<path> -DCMAKE_PREFIX_PATH=<path> -GXcode
+cmake .. -DCMAKE_MODULE_PATH=<path>/brawtool/modules -DCMAKE_PREFIX_PATH=<path> -GXcode
 cmake --build . --config Release -j 8
 ```
 
-**Example using 3rdparty on arm64**
+**Example using 3rdparty on arm64 with Xcode**
 
 ```shell
 mkdir build
 cd build
 cmake ..
-cmake .. -DCMAKE_PREFIX_PATH=<path>/3rdparty/build/macosx/arm64.debug -DCMAKE_INSTALL_PREFIX=<path>/3rdparty/build/macosx/arm64.debug -DCMAKE_CXX_FLAGS="-I<path>/include/eigen3" -DBUILD_SHARED_LIBS=TRUE -GXcode
+cmake .. -DCMAKE_PREFIX_PATH=<path>/3rdparty/build/macosx/arm64.debug -DCMAKE_CXX_FLAGS="-I<path>/3rdparty/build/macosx/arm64.debug/include/eigen3" -GXcode
 ```
+
+Download
+---------
+
+Colortool is included as part of pipeline tools. You can download it from the releases page:
+
+* https://github.com/mikaelsundell/pipeline/releases
 
 Dependencies
 -------------

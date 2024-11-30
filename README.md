@@ -6,7 +6,129 @@ README for colortool
 Introduction
 ------------
 
-colortool is a utility set for color space conversions, with support for white point adaptation.
+colortool is a utility set for color space and conversions, with support for white point adaptation.
+
+# Color spaces
+
+## Overview
+This tool computes **RGB to XYZ** and **XYZ to RGB** transformation matrices for a given color space, such as converting between **ACES AP0** and **XYZ**.
+
+### Example Usage
+To compute the RGB to XYZ and XYZ to RGB matrices for a specific color space (e.g., **AP1**):
+```shell
+colortool --inputcolorspace AP1 -v
+```
+
+### RGB to XYZ Transformation
+
+| **Matrix**       | **Values**                           |
+|-------------------|---------------------------------------|
+| Original          | 0.952552, 0.000000, 0.000094         |
+|                   | 0.343966, 0.728166, -0.072133        |
+|                   | 0.000000, 0.000000, 1.008825         |
+| Transposed        | 0.952552, 0.343966, 0.000000         |
+|                   | 0.000000, 0.728166, 0.000000         |
+|                   | 0.000094, -0.072133, 1.008825        |
+
+### XYZ to RGB Transformation
+
+| **Matrix**       | **Values**                           |
+|-------------------|---------------------------------------|
+| Original          | 1.049811, 0.000000, -0.000097        |
+|                   | -0.495903, 1.373313, 0.098240        |
+|                   | 0.000000, 0.000000, 0.991252         |
+| Transposed        | 1.049811, -0.495903, 0.000000        |
+|                   | 0.000000, 1.373313, 0.000000         |
+|                   | -0.000097, 0.098240, 0.991252        |
+
+## Supported color spaces
+
+To list all supported color spaces, use:
+```shell
+colortool --colorspaces
+```
+
+| **Color Space**   | **Description**                         |
+|--------------------|-----------------------------------------|
+| AP0               | ACES AP0                                |
+| AP1               | ACES AP1                                |
+| AWG3              | ARRI Wide Gamut 3                   |
+| AWG4              | ARRI Wide Gamut 4                   |
+| DCIP3             | Digital Cinema P3                      |
+| DCIP3-D60         | DCI P3 with D60 white point            |
+| DCIP3-D65         | DCI P3 with D65 white point            |
+| Rec709            | Rec. 709                               |
+
+## Color space definition in JSON
+The color spaces are defined in the corresponding JSON configuration file. For example, **AP0** is defined as follows:
+
+```json
+"AP0": {
+    "description": "ACES 2065-1",
+    "trc": "Linear",
+    "primaries": {
+        "R": { "x": 0.7347, "y": 0.2653 },
+        "G": { "x": 0.0000, "y": 1.0000 },
+        "B": { "x": 0.0001, "y": -0.0770 }
+    },
+    "whitepoint": {
+        "x": 0.32168,
+        "y": 0.33767
+    }
+}
+```
+
+## Illuminants
+
+### Overview
+This tool also supports computing **illuminant values** such as **D65**. Use the following command:
+```shell
+colortool --inputilluminant D65
+```
+
+### Illuminant Information (D65)
+
+| **Property**       | **Values**                           |
+|---------------------|---------------------------------------|
+| **Input Colorspace**| D65                                  |
+| **Description**     | D65                                  |
+| **Whitepoint (XY)** | 0.312720, 0.329030                   |
+| **Whitepoint (XYZ)**| 0.950430, 1.000000, 1.088806         |
+
+## Supported illuminants
+
+To list all supported illuminants, use:
+
+```shell
+colortool --illuminants
+```
+
+| **Illuminant**   | **Description**                         |
+|-------------------|-----------------------------------------|
+| A                | Standard illuminant A                   |
+| B                | Standard illuminant B                   |
+| C                | Standard illuminant C                   |
+| D50             | Daylight illuminant with 5000K color temp |
+| D55             | Daylight illuminant with 5500K color temp |
+| D60             | Daylight illuminant with 6000K color temp |
+| D65             | Daylight illuminant with 6500K color temp |
+| D75             | Daylight illuminant with 7500K color temp |
+| D93             | Daylight illuminant with 9300K color temp |
+| E                | Equal energy illuminant                 |
+
+
+## Illuminants definition in JSON
+The illuminants are defined in the corresponding JSON configuration file. For example, **D65** is defined as follows:
+
+```json
+"D65": {
+    "description": "D65",
+    "whitepoint": {
+        "x": 0.31272,
+        "y": 0.32903
+    }
+}
+```
 
 Building
 --------

@@ -6,20 +6,20 @@ README for colortool
 Introduction
 ------------
 
-colortool is a utility set for color space and conversions, with support for white point adaptation.
+colortool is a utility set for color space and conversions, with support for illuminants and white point adaptation.
 
 # Color spaces
 
 ## Overview
 This tool computes **RGB to XYZ** and **XYZ to RGB** transformation matrices for a given color space, such as converting between **ACES AP0** and **XYZ**.
 
-### Example Usage
+### Example usage
 To compute the RGB to XYZ and XYZ to RGB matrices for a specific color space (e.g., **AP1**):
 ```shell
 colortool --inputcolorspace AP1 -v
 ```
 
-### RGB to XYZ Transformation
+### RGB to XYZ transformation
 
 | **Matrix**       | **Values**                           |
 |-------------------|---------------------------------------|
@@ -30,7 +30,7 @@ colortool --inputcolorspace AP1 -v
 |                   | 0.000000, 0.728166, 0.000000         |
 |                   | 0.000094, -0.072133, 1.008825        |
 
-### XYZ to RGB Transformation
+### XYZ to RGB transformation
 
 | **Matrix**       | **Values**                           |
 |-------------------|---------------------------------------|
@@ -86,7 +86,7 @@ This tool also supports computing **illuminant values** such as **D65**. Use the
 colortool --inputilluminant D65
 ```
 
-### Illuminant Information (D65)
+### Illuminant information (D65)
 
 | **Property**       | **Values**                           |
 |---------------------|---------------------------------------|

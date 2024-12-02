@@ -549,16 +549,16 @@ main( int argc, const char * argv[])
         Eigen::Matrix3d inputxyz;
         Illuminant inputilluminant = illuminants[tool.inputilluminant];
         Eigen::Vector3d inputwhitepoint;
-        print_info("input colorspace: ", inputilluminant.name);
+        print_info("input illuminant: ", inputilluminant.name);
         print_info("     description: ", inputilluminant.description);
         {
             inputwhitepoint = xy_to_xyz(inputilluminant.whitepoint);
             if (tool.verbose) {
                 print_info("  XY");
                 print_value("    whitepoint: ", inputilluminant.whitepoint);
-                print_info("  XYZ");
-                print_value("    whitepoint: ", inputwhitepoint);
             }
+            print_info("  XYZ");
+            print_value("    whitepoint: ", inputwhitepoint);
         }
         
         // output illuminant
@@ -578,9 +578,9 @@ main( int argc, const char * argv[])
                 if (tool.verbose) {
                     print_info("  XY");
                     print_value("    whitepoint: ", outputilluminant.whitepoint);
-                    print_info("  XYZ");
-                    print_value("    whitepoint: ", outputwhitepoint);
                 }
+                print_info("  XYZ");
+                print_value("    whitepoint: ", outputwhitepoint);
             }
 
             // whitepoint adaptation

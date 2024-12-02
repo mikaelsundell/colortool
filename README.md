@@ -1,4 +1,4 @@
-README for colortool
+Colortool
 ==================
 
 [![License](https://img.shields.io/badge/license-BSD%203--Clause-blue.svg?style=flat-square)](https://github.com/mikaelsundell/colortool/blob/master/README.md)

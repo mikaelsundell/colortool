@@ -6,7 +6,7 @@ Colortool
 Introduction
 ------------
 
-colortool is a utility set for color space and conversions, with support for illuminants and white point adaptation.
+Colortool is a utility set for color space and conversions, with support for illuminants and white point adaptation.
 
 # Color spaces
 

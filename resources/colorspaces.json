@@ -87,6 +87,28 @@
             "y": 0.3290
         }
     },
+    "DWG": {
+        "description": "DaVinci Wide Gamut D65",
+        "trc": "Linear",
+        "primaries": {
+            "R": {
+                "x": 0.8000,
+                "y": 0.3130
+            },
+            "G": {
+                "x": 0.1682,
+                "y": 0.9877
+            },
+            "B": {
+                "x": 0.0790,
+                "y": -0.1155
+            }
+        },
+        "whitepoint": {
+            "x": 0.3127,
+            "y": 0.3290
+        }
+    },
     "DCIP3": {
         "description": "DCI-P3 (Theatrical)",
         "trc": "Gamma2.6",

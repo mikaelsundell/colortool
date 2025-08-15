@@ -59,11 +59,13 @@ colortool --colorspaces
 |--------------------|-----------------------------------------|
 | AP0               | ACES AP0                                |
 | AP1               | ACES AP1                                |
-| AWG3              | ARRI Wide Gamut 3                   |
-| AWG4              | ARRI Wide Gamut 4                   |
+| AWG3              | ARRI Wide Gamut 3                       |
+| AWG4              | ARRI Wide Gamut 4                       |
 | DCIP3             | Digital Cinema P3                      |
 | DCIP3-D60         | DCI P3 with D60 white point            |
 | DCIP3-D65         | DCI P3 with D65 white point            |
+| DWG               | DaVinci Wide Gamut D65                 |
+| GEN5              | Blackmagic Generation 5                |
 | Rec709            | Rec. 709                               |
 
 ## Color space definition in JSON

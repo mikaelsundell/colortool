@@ -87,9 +87,31 @@
             "y": 0.3290
         }
     },
+    "GEN5": {
+        "description": "Blackmagic Generation 5",
+        "trc": "Film 5",
+        "primaries": {
+            "R": {
+                "x": 0.7177215,
+                "y": 0.3171181
+            },
+            "G": {
+                "x": 0.2280410,
+                "y": 0.8615690
+            },
+            "B": {
+                "x": 0.1005841,
+                "y": -0.0820452
+            }
+        },
+        "whitepoint": {
+            "x": 0.3127170,
+            "y": 0.3290312
+        }
+    },
     "DWG": {
         "description": "DaVinci Wide Gamut D65",
-        "trc": "Linear",
+        "trc": "DaVinci Intermediate",
         "primaries": {
             "R": {
                 "x": 0.8000,

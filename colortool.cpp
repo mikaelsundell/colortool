@@ -447,6 +447,8 @@ main( int argc, const char * argv[])
             print_info("  RGB XYZ");
             print_value("    matrix: ", inputxyz);
             print_value("    matrix transposed: ", inputxyz.transpose());
+            print_info("  RGB Y luminance coeff");
+            print_value("    vector: ", inputxyz.row(1));
             print_info("  XYZ RGB");
             print_value("    matrix: ", inputxyz.inverse());
             print_value("    matrix transposed: ", inputxyz.inverse().transpose());
@@ -486,6 +488,8 @@ main( int argc, const char * argv[])
                 print_info("  RGB XYZ");
                 print_value("    matrix: ", outputxyz);
                 print_value("    matrix transposed: ", outputxyz.transpose());
+                print_info("  RGB Y luminance coeff");
+                print_value("    vector: ", outputxyz.row(1));
                 print_info("  XYZ RGB");
                 print_value("    matrix: ", outputxyz.inverse());
                 print_value("    matrix transposed: ", outputxyz.inverse().transpose());

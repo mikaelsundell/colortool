@@ -8,6 +8,12 @@ Introduction
 
 Colortool is a utility set for color space and conversions, with support for illuminants and white point adaptation.
 
+Change log:
+
+| Date       | Description                             |
+|------------|-----------------------------------------|
+| 2025-08-15 | Added RGB Y luminance coeff to output |
+
 # Color spaces
 
 ## Overview
